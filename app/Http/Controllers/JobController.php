@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class JobController extends Controller
@@ -17,143 +18,170 @@ class JobController extends Controller
 
     // @desc Show all job listings
     // @route GET /jobs
-    public function index() : View
+    public function index(): View
     {
-        $jobs=Job::latest()->paginate(9);
-        return view('jobs.index',compact('jobs'));
+        $jobs = Job::latest()->paginate(9);
+        return view('jobs.index', compact('jobs'));
     }
 
     // @desc Show create job form
     // @route GET /jobs/create
-    public function create() : View
+    public function create(): View
     {
         return view('jobs.create');
     }
 
     // @desc Save job to database
     // @route POST /jobs
-    public function store(Request $request) : RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $validatedData=$request->validate([
-            'title'=> 'required|string|max:255',
-            'description'=> 'required|string',
-            'salary'=> 'required|integer',
-            'tags'=> 'nullable|string',
-            'job_type'=> 'required|string',
-            'remote'=> 'required|boolean',
-            'requirements'=> 'nullable|string',
-            'benefits'=> 'nullable|string',
-            'address'=> 'nullable|string',
-            'city'=> 'required|string',
-            'state'=> 'required|string',
-            'zipcode'=> 'nullable|string',
-            'contact_email'=> 'required|string',
-            'contact_phone'=> 'nullable|string',
-            'company_name'=> 'required|string',
-            'company_description'=> 'nullable|string',
-            'company_logo'=> 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
-            'company_website'=> 'nullable|url']);
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'salary' => 'required|integer',
+            'tags' => 'nullable|string',
+            'job_type' => 'required|string',
+            'remote' => 'required|boolean',
+            'requirements' => 'nullable|string',
+            'benefits' => 'nullable|string',
+            'address' => 'nullable|string',
+            'city' => 'required|string',
+            'state' => 'required|string',
+            'zipcode' => 'nullable|string',
+            'contact_email' => 'required|string',
+            'contact_phone' => 'nullable|string',
+            'company_name' => 'required|string',
+            'company_description' => 'nullable|string',
+            'company_logo' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+            'company_website' => 'nullable|url'
+        ]);
 
-        //Hardcoded user ID
-        $validatedData['user_id']=Auth::id();
+        // Assign the logged-in user
+        $validatedData['user_id'] = Auth::id();
 
-        //Check for image
-        if($request->hasFile('company_logo')){
-            //Store the file and get path
-            $path=$request->file('company_logo')->store('logos','public');
+        // ✅ Handle logo upload to Supabase using `body`
+        if ($request->hasFile('company_logo')) {
+            $file = $request->file('company_logo');
+            $fileName = 'avatars/' . uniqid() . '-' . $file->getClientOriginalName();
 
-            //Add path to validated data
-            $validatedData['company_logo']=$path;
+            // 🔹 Upload to Supabase with `body`
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+                'Content-Type' => $file->getMimeType(),
+                'x-upsert' => 'true'
+            ])->send('POST', env('SUPABASE_URL') . "/storage/v1/object/" . env('SUPABASE_STORAGE_BUCKET') . "/$fileName", [
+                'body' => fopen($file->getRealPath(), 'r'), // ✅ Corrected file streaming
+            ]);
+
+            if ($response->successful()) {
+                $validatedData['company_logo'] = env('SUPABASE_URL') . "/storage/v1/object/public/" . env('SUPABASE_STORAGE_BUCKET') . "/$fileName";
+            } else {
+                return redirect()->back()->with('error', 'Failed to upload logo to Supabase.');
+            }
         }
 
-        //Submit to database
+        // Save to database
         Job::create($validatedData);
-
-        return redirect()->route('jobs.index')->with('success','Job listing created successfully!');
+        return redirect()->route('jobs.index')->with('success', 'Job listing created successfully!');
     }
 
+
     // @desc Display a single job listing 
-    // @route GET /jobs/{$id}
-    public function show(Job $job) : View
+    // @route GET /jobs/{job}
+    public function show(Job $job): View
     {
-        return view('jobs.show',compact('job'));
+        return view('jobs.show', compact('job'));
     }
 
     // @desc Show edit job form 
-    // @route GET /jobs/{$id}/edit
-    public function edit(Job $job) : View
+    // @route GET /jobs/{job}/edit
+    public function edit(Job $job): View
     {
-        //Check if the user is authorized
         $this->authorize('update', $job);
-        return view('jobs.edit',compact('job'));
+        return view('jobs.edit', compact('job'));
     }
 
     // @desc Update job listing
-    // @route PUT /jobs/{$id}
-    public function update(Request $request, Job $job) : string
+    // @route PUT /jobs/{job}
+    public function update(Request $request, Job $job): RedirectResponse
     {
-        //Check if the user is authorized
-        $this->authorize('update',$job);
+        $this->authorize('update', $job);
 
-        $validatedData=$request->validate([
-            'title'=> 'required|string|max:255',
-            'description'=> 'required|string',
-            'salary'=> 'required|integer',
-            'tags'=> 'nullable|string',
-            'job_type'=> 'required|string',
-            'remote'=> 'required|boolean',
-            'requirements'=> 'nullable|string',
-            'benefits'=> 'nullable|string',
-            'address'=> 'nullable|string',
-            'city'=> 'required|string',
-            'state'=> 'required|string',
-            'zipcode'=> 'nullable|string',
-            'contact_email'=> 'required|string',
-            'contact_phone'=> 'nullable|string',
-            'company_name'=> 'required|string',
-            'company_description'=> 'nullable|string',
-            'company_logo'=> 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
-            'company_website'=> 'nullable|url']);
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'salary' => 'required|integer',
+            'tags' => 'nullable|string',
+            'job_type' => 'required|string',
+            'remote' => 'required|boolean',
+            'requirements' => 'nullable|string',
+            'benefits' => 'nullable|string',
+            'address' => 'nullable|string',
+            'city' => 'required|string',
+            'state' => 'required|string',
+            'zipcode' => 'nullable|string',
+            'contact_email' => 'required|string',
+            'contact_phone' => 'nullable|string',
+            'company_name' => 'required|string',
+            'company_description' => 'nullable|string',
+            'company_logo' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+            'company_website' => 'nullable|url'
+        ]);
 
-        //Check for image
-        if($request->hasFile('company_logo')){
-            //Delete old logo
-            Storage::delete('public/logo/' . basename($job->company_logo));
-
-            //Store the file and get path
-            $path=$request->file('company_logo')->store('logos','public');
-
-            //Add path to validated data
-            $validatedData['company_logo']=$path;
+        // Handle logo replacement
+        if ($request->hasFile('company_logo')) {
+            $file = $request->file('company_logo');
+            $fileName = 'avatars/' . uniqid() . '-' . $file->getClientOriginalName();
+    
+            // 🔹 Delete the old logo from Supabase
+            if (!empty($job->company_logo)) {
+                $oldFileName = basename($job->company_logo);
+                Http::withHeaders([
+                    'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+                ])->delete(env('SUPABASE_URL') . "/storage/v1/object/" . env('SUPABASE_STORAGE_BUCKET') . "/avatars/$oldFileName");
+            }
+    
+            // 🔹 Upload the new file to Supabase
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+                'Content-Type' => $file->getMimeType(),
+                'x-upsert' => 'true'
+            ])->send('POST', env('SUPABASE_URL') . "/storage/v1/object/" . env('SUPABASE_STORAGE_BUCKET') . "/$fileName", [
+                'body' => fopen($file->getRealPath(), 'r'), // ✅ Using 'body' properly
+            ]);
+    
+            if ($response->failed()) {
+                return redirect()->back()->with('error', 'Failed to upload logo to Supabase.');
+            }
+    
+            // ✅ Store the correct Supabase public URL
+            $validatedData['company_logo'] = env('SUPABASE_URL') . "/storage/v1/object/public/" . env('SUPABASE_STORAGE_BUCKET') . "/$fileName";
         }
+    
 
-        //Submit to database
+        // Update job
         $job->update($validatedData);
-
-        return redirect()->route('jobs.index')->with('success','Job listing updated successfully!');
+        return redirect()->route('jobs.index')->with('success', 'Job listing updated successfully!');
     }
 
     // @desc Delete a job listing
-    // @route DELETE /jobs/{$id}
-    public function destroy(Job $job) : RedirectResponse
+    // @route DELETE /jobs/{job}
+    public function destroy(Job $job): RedirectResponse
     {
-        //Check if the user is authorized
-        $this->authorize('delete',$job);
+        $this->authorize('delete', $job);
 
-        //If logo, then delete it 
-        if($job->company_logo) {
-            Storage::delete('public/logos/' . $job->company_logo);
+        // Delete logo from Supabase
+        if ($job->company_logo) {
+            $logoPath = str_replace(env('SUPABASE_URL') . "/storage/v1/object/public/" . env('SUPABASE_STORAGE_BUCKET') . "/", '', $job->company_logo);
+            Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+            ])->delete(env('SUPABASE_URL') . "/storage/v1/object/" . env('SUPABASE_STORAGE_BUCKET') . "/$logoPath");
         }
 
+        // Delete job
         $job->delete();
 
-        //Check if request came from the dashboard
-        if (request()->query('from') == 'dashboard') {
-            return redirect()->route('dashboard')->with('success', 'Job listing deleted successfully');
-        }
-
-        return redirect()->route('jobs.index')->with('success','Job listing deleted successfully!');
-
+        return redirect()->route('jobs.index')->with('success', 'Job listing deleted successfully!');
     }
 
     // @desc Search job listings
@@ -164,32 +192,18 @@ class JobController extends Controller
         $location = strtolower($request->input('location'));
 
         $query = Job::query();
-
         if ($keywords) {
-            $query->where(function ($q) use ($keywords) {
-                $q->whereRaw('LOWER(title) like ?', ['%' . $keywords . '%'])
-                    ->orWhereRaw('LOWER(description) like ?', ['%' . $keywords . '%'])
-                    ->orWhereRaw('LOWER(tags) like ?', ['%' . $keywords . '%']);
-            });
+            $query->whereRaw('LOWER(title) LIKE ?', ["%$keywords%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%$keywords%"])
+                  ->orWhereRaw('LOWER(tags) LIKE ?', ["%$keywords%"]);
         }
 
         if ($location) {
-            $query->where(function ($q) use ($location) {
-                $q->whereRaw('LOWER(address) like ?', ['%' . $location . '%'])
-                    ->orWhereRaw('LOWER(city)like ?', ['%' . $location . '%'])
-                    ->orWhereRaw('LOWER(state) like ?', ['%' . $location . '%'])
-                    ->orWhereRaw('LOWER(zipcode) like ?', ['%' . $location . '%']);
-            });
+            $query->whereRaw('LOWER(city) LIKE ?', ["%$location%"])
+                  ->orWhereRaw('LOWER(state) LIKE ?', ["%$location%"]);
         }
 
-
         $jobs = $query->paginate(12);
-        return view('jobs.index')->with('jobs', $jobs);
-    }
-
-    public function downloadPdf(Job $job)
-    {
-        $pdf = Pdf::loadView('jobs.pdf', compact('job'));
-        return $pdf->download('Job_Details.pdf');
+        return view('jobs.index', compact('jobs'));
     }
 }
