@@ -6,24 +6,20 @@
     },
     "routes": [
         {
-            "src": "^/css/(.*)$",
-            "dest": "/public/css/$1"
+            "src": "/build/(.*)",
+            "dest": "/build/$1"
         },
         {
-            "src": "^/js/(.*)$",
-            "dest": "/public/js/$1"
-        },
-        {
-            "src": "^/storage/(.*)$",
-            "dest": "/public/storage/$1"
+            "src": "/(.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|ttf|woff|woff2|eot|otf|webp|avif|txt))$",
+            "dest": "/public/$1"
         },
         {
             "src": "/(.*)",
             "dest": "/api/index.php"
         }
     ],
+    "outputDirectory": "public",
     "env": {
-        "APP_ENV": "production",
         "APP_DEBUG": "true",
         "APP_URL": "https://job-quest-app.vercel.app",
         "APP_KEY": "base64:swc/frNWH/upN9ZNxtoRgpIl9DJIH4B7VUY4fdhT1EI=",
