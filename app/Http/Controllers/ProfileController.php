@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
 
 class ProfileController extends Controller
@@ -31,16 +32,27 @@ class ProfileController extends Controller
         $user->name=$request->input('name');
         $user->email=$request->input('email');
 
-        //Handle avatar upload
-        if($request->hasFile('avatar')){
-            //Delete old avatar if exists
-            if($user->avatar){
-                Storage::delete('public/' . $user->avatar);
+         // Handle avatar upload
+         if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $fileName = 'avatars/' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $fileContent = file_get_contents($file);
+
+            // Upload file to Supabase
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('SUPABASE_KEY'),
+                'Content-Type' => $file->getMimeType(),
+                'x-upsert' => 'true'
+            ])->send('PUT', env('SUPABASE_URL') . "/storage/v1/object/" . env('SUPABASE_STORAGE_BUCKET') . "/" . $fileName, [
+                'body' => $fileContent
+            ]);
+
+            if ($response->failed()) {
+                return redirect()->back()->with('error', 'Failed to upload avatar');
             }
 
-            //Store new avatar
-            $avatarPath=$request->file('avatar')->store('avatars','public');
-            $user->avatar=$avatarPath;
+            // Save the public Supabase URL in the database
+            $user->avatar = env('SUPABASE_URL') . "/storage/v1/object/public/" . env('SUPABASE_STORAGE_BUCKET') . "/" . $fileName;
         }
 
         //Update user info

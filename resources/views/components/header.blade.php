@@ -10,11 +10,11 @@
                 <x-nav-link url="/bookmarks" :active="request()->is('bookmarks')">Saved Jobs</x-nav-link>
                 <x-logout-button />
                 <div class="flex items-center space-x-3">
-                    <a href="{{route('dashboard')}}">
+                    <a href="{{ route('dashboard') }}">
                         @if (Auth::user()->avatar)
-                            <img src="{{asset('storage/' . Auth::user()->avatar)}}" alt="{{Auth::user()->name}}" class="w-10 h-10 rounded-full">
+                            <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
                         @else
-                            <img src="{{asset('storage/avatars/default-avatar.png')}}" alt="{{Auth::user()->name}}" class="w-10 h-10 rounded-full">
+                            <img src="{{ asset('storage/avatars/default-avatar.png') }}" alt="{{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
                         @endif
                     </a>
                 </div>

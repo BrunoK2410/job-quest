@@ -6,7 +6,7 @@
             </h3>
             @if ($user->avatar)
                 <div class="mt-2 flex justify-center">
-                    <img src="{{asset('storage/' . $user->avatar)}}" alt="{{$user->name}}" class="w-32 h-32 object-cover rounded-full">
+                    <img src="{{ $user->avatar }}" alt="{{$user->name}}" class="w-32 h-32 object-cover rounded-full">
                 </div>
             @endif
             <form
