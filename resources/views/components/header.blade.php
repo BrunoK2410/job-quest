@@ -14,7 +14,7 @@
                         @if (Auth::user()->avatar)
                             <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
                         @else
-                            <img src="{{ env('SUPABASE_URL') }}/storage/v1/object/public/avatars/default-avatar.png" alt="{{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
+                            <img src="{{ env('SUPABASE_URL') }}/storage/v1/object/public/avatars/avatars/default-avatar.png" alt="{{ Auth::user()->name }}" class="w-10 h-10 rounded-full">
                         @endif
                     </a>
                 </div>
