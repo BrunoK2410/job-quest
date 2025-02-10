@@ -10,8 +10,8 @@
             "dest": "/build/$1"
         },
         {
-            "src": "^/storage/logos/(.*)$",
-            "dest": "/public/storage/logos/$1"
+            "src": "^/storage/(.*)$",
+            "dest": "/public/storage/$1"
         },
         {
             "src": "/(.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|ttf|woff|woff2|eot|otf|webp|avif|txt))$",

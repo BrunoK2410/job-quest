@@ -4,7 +4,7 @@
     <div class="flex items-center gap-4">
         @if($job->company_logo)
         <div class="w-12 h-12 flex-shrink-0">
-            <img src="/storage/{{$job->company_logo}}" alt="{{$job->company_name}}" class="rounded-full object-cover w-full h-full">
+            <img src="{{asset('storage/' . $job->company_logo)}}" alt="{{$job->company_name}}" class="rounded-full object-cover w-full h-full">
         </div>
         @endif
         <div>
