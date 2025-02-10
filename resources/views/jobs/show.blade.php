@@ -70,8 +70,8 @@
                   <button @click="open = true" class="block w-full text-center px-5 py-2.5 shadow-sm rounded border text-base font-medium cursor-pointer text-white bg-amber-500 hover:bg-amber-600">
                     Apply Now
                   </button>
-                  <div x-cloak x-show="open" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-                    <div @click.away="open = false" class="bg-gray-800 text-white p-6 rounded-lg shadow-md w-full max-w-md max-h-[90vh] overflow-y-auto">
+                  <div x-cloak x-show="open" class="fixed inset-0 bg-gray-800 bg-opacity-50">
+                    <div @click.away="open = false" class="bg-gray-800 text-white p-6 rounded-lg shadow-md w-full max-w-md max-h-[90vh] overflow-y-auto absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                       <h3 class="text-lg font-semibold mb-4">Apply For {{$job->title}}</h3>
                       <form method="POST" action="{{route('applicant.store', $job->id)}}" enctype="multipart/form-data">
                         @csrf
@@ -99,7 +99,7 @@
         <aside class="bg-gray-900 text-amber-100 rounded-lg shadow-md p-3">
             <h3 class="text-xl text-center mb-4 font-bold">Company Info</h3>
             @if($job->company_logo)
-            <img src="/storage/{{$job->company_logo}}" alt="{{$job->company_name}}" class="w-full rounded-lg mb-4 m-auto" />
+            <img src="{{$job->company_logo}}" alt="{{$job->company_name}}" class="w-full rounded-lg mb-4 m-auto" />
             @endif
             <h4 class="text-lg font-bold">{{$job->company_name}}</h4>
             @if($job->company_description)

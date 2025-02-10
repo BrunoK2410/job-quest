@@ -42,3 +42,5 @@ Route::post('/jobs/{job}/apply', [ApplicantController::class, 'store'])->name('a
 Route::delete('/applicants/{applicant}', [ApplicantController::class, 'destroy'])->name('applicant.destroy')->middleware('auth');
 
 Route::get('/geocode', [GeocodeController::class, 'geocode']);
+Route::get('/download/resume/{applicant}', [ApplicantController::class, 'downloadResume'])
+    ->name('resume.download');
