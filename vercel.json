@@ -17,7 +17,7 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "true",
-        "APP_URL": "https://job-quest-app.vercel.app/",
+        "APP_URL": "https://job-quest-app.vercel.app",
         "APP_KEY": "base64:swc/frNWH/upN9ZNxtoRgpIl9DJIH4B7VUY4fdhT1EI=",
 
         "APP_CONFIG_CACHE": "/tmp/config.php",
