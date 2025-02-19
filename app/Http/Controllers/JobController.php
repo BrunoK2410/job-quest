@@ -206,4 +206,11 @@ class JobController extends Controller
         $jobs = $query->paginate(12);
         return view('jobs.index', compact('jobs'));
     }
+
+    public function downloadPdf(Job $job)
+    {
+        $pdf = Pdf::loadView('jobs.pdf', compact('job'));
+        return $pdf->download('Job_Details.pdf');
+    }
+
 }
