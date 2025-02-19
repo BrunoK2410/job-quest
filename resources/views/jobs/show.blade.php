@@ -114,18 +114,17 @@
              </p>
             @else 
             <form action="{{auth()->user()->bookmarkedJobs()->where('job_id', $job->id)->exists() ? route('bookmarks.destroy', $job->id) : route('bookmarks.store', $job->id)}}" method="POST">
-                @csrf
-                @if (auth()->user()->bookmarkedJobs()->where('job_id', $job->id)->exists())
-                    @method('DELETE')
-                    <button type="submit" class="mt-10 bg-red-500 hover:bg-red-600 text-white font-bold w-full py-2 px-4 rounded-full flex items-center justify-center">
-                        <i class="fas fa-bookmark mr-3"></i> Remove Bookmark
-                    </button>
-                @else
-                    <button type="submit" class="mt-10 bg-blue-500 hover:bg-blue-600 text-white font-bold w-full py-2 px-4 rounded-full flex items-center justify-center">
-                        <i class="fas fa-bookmark mr-3"></i> Bookmark Listing
-                    </button>
-                @endif
-
+               @csrf
+               @if (auth()->user()->bookmarkedJobs()->where('job_id', $job->id)->exists())
+                @method('DELETE')
+                <button type="submit" class="mt-10 bg-amber-500 hover:bg-amber-600 text-white font-bold w-full py-2 px-4 rounded-full flex items-center justify-center">
+                  <i class="fas fa-bookmark mr-3"></i> Remove Bookmark
+                </button>
+               @else
+                <button type="submit" class="mt-10 bg-gray-500 hover:bg-gray-600 text-white font-bold w-full py-2 px-4 rounded-full flex items-center justify-center">
+                  <i class="far fa-bookmark mr-3"></i> Bookmark Listing
+                </button>
+              @endif
             </form>
             @endguest
         </aside>
